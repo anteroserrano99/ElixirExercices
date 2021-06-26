@@ -14,6 +14,7 @@ defmodule TodoList do
       autoId: todo_list.autoId + 1
   }
 
+
   end
 
   def updateEntry(todo_list, id, updateFunction) do
@@ -44,6 +45,41 @@ defmodule TodoList do
   end
 
 
+  def addNewEntries(entries \\ []) do
+    Enum.reduce(entries,
+    %TodoList{},
+    fn element, acc ->
+      addEntry(acc, element)
+    end)
+
+  end
+
+  defmodule CsvImporter do
+    def openCsv(path) do
+      File.stream!(path)
+      |> Stream.map(&String.replace(&1, "\n", ""))
+      |> Stream.map(&String.split(&1,","))
+      |> Stream.map(&parseEntry(&1))
+      |> Enum.to_list()
+      |> TodoList.addNewEntries()
+
+    end
+
+    defp parseEntry([date, title]) do
+      {year, month, day} = String.split(date, "/")
+      |> List.to_tuple()
+
+      parsedDate = year <> "-" <> month <> "-" <> day
+      {:ok, parsedDate} = Date.from_iso8601(parsedDate)
+
+      %{date: parsedDate, title: title}
+    end
+
+  end
+
+
+  defmodule TestingModule do
+
   def generate_test_data() do
     entry1 = %{date: ~D[2021-01-01], title: "theater"}
     entry2 = %{date: ~D[2021-01-02], title: "park"}
@@ -64,7 +100,12 @@ defmodule TodoList do
 
   def delete_test() do
     generate_test_data()
-    |> deleteEntry(1)
+    |> TodoList.deleteEntry(1)
   end
+
+end
+
+
+
 
 end
