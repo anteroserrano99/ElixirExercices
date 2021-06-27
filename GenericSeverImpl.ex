@@ -11,15 +11,20 @@ defmodule ServerProcess do
 
   defp loop(callback_module, state) do
     receive do
-      {request, caller} ->
+      {:call, request, caller} ->
         {response, new_state} = callback_module.handle_call(request, state)
-    send(caller, {:response, response})
-    loop(callback_module, new_state)
+        send(caller, {:response, response})
+        loop(callback_module, new_state)
+
+      {:cast, request} ->
+        new_state = callback_module.handle_cast(request, state)
+        loop(callback_module, new_state)
     end
+
   end
 
   def call(server_pid, request) do
-    send(server_pid, {request, self()})
+    send(server_pid, {:call, request, self()})
 
     receive do
       {:response, response} ->
@@ -28,18 +33,33 @@ defmodule ServerProcess do
 
   end
 
-
+  def cast(server_pid, request) do
+    send(server_pid, {:cast, request})
+    end
 end
 
 
 
 defmodule KeyValueStore do
 
+
+  def start do
+    ServerProcess.start(KeyValueStore)
+  end
+
+  def put(pid, key, value) do
+    ServerProcess.cast(pid, {:put, key, value})
+  end
+
+  def get(pid, key) do
+    ServerProcess.call(pid, {:get, key})
+  end
+
+
   def init, do: %{}
 
-  def handle_call({:put, key, value}, state) do
-    {:ok, Map.put(state, key, value)}
-
+  def handle_cast({:put, key, value}, state) do
+    Map.put(state, key, value)
   end
 
   def handle_call({:get, key}, state) do
@@ -55,9 +75,10 @@ defmodule TestingModule do
 
   def testServer() do
 
-    pid = ServerProcess.start(KeyValueStore)
-    ServerProcess.call(pid, {:put, :key, :value})
-    ServerProcess.call(pid, {:get, :key})
+    pid = KeyValueStore.start()
+    KeyValueStore.put(pid, :key, :value)
+    KeyValueStore.get(pid, :key)
+
 
 
   end
