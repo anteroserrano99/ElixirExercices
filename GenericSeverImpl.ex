@@ -10,17 +10,16 @@ defmodule ServerProcess do
 
 
   defp loop(callback_module, state) do
-    receive do
+    new_state = receive do
       {:call, request, caller} ->
         {response, new_state} = callback_module.handle_call(request, state)
         send(caller, {:response, response})
-        loop(callback_module, new_state)
+        new_state
 
       {:cast, request} ->
         new_state = callback_module.handle_cast(request, state)
-        loop(callback_module, new_state)
     end
-
+    loop(callback_module, new_state)
   end
 
   def call(server_pid, request) do
@@ -78,9 +77,6 @@ defmodule TestingModule do
     pid = KeyValueStore.start()
     KeyValueStore.put(pid, :key, :value)
     KeyValueStore.get(pid, :key)
-
-
-
   end
 
 end
