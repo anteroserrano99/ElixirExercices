@@ -1,15 +1,15 @@
 
-defmodule TodoList do
+defmodule Todo.List do
 
   defstruct  autoId: 1, entries: %{}
 
 
-  def new, do: %TodoList{}
+  def new, do: %Todo.List{}
 
   def addEntry(todo_list, entry) do
     entry = Map.put(entry, :id, todo_list.autoId)
     new_entries = Map.put(todo_list.entries, todo_list.autoId, entry)
-    %TodoList{ todo_list |
+    %Todo.List{ todo_list |
       entries: new_entries,
       autoId: todo_list.autoId + 1
   }
@@ -24,7 +24,7 @@ defmodule TodoList do
       {:ok, old_entry} ->
         new_entry = updateFunction.(old_entry)
         new_entries = Map.put(todo_list.entries, id, new_entry)
-        %TodoList{todo_list |
+        %Todo.List{todo_list |
           entries: new_entries
         }
     end
@@ -36,7 +36,7 @@ defmodule TodoList do
       :error -> todo_list
       {:ok, entry_to_delete} ->
       new_entries = Map.delete(todo_list.entries, id)
-      %TodoList{todo_list |
+      %Todo.List{todo_list |
         entries: new_entries
     }
     end
@@ -46,7 +46,7 @@ defmodule TodoList do
 
   def addNewEntries(entries \\ []) do
     Enum.reduce(entries,
-    %TodoList{},
+    %Todo.List{},
     fn element, acc ->
       addEntry(acc, element)
     end)
@@ -61,7 +61,7 @@ defmodule TodoList do
       |> Stream.map(&String.split(&1,","))
       |> Stream.map(&parseEntry(&1))
       |> Enum.to_list()
-      |> TodoList.addNewEntries()
+      |> Todo.List.addNewEntries()
 
     end
 
@@ -78,31 +78,5 @@ defmodule TodoList do
   end
 
 
-  defmodule TestingModule do
-
-  def generate_test_data() do
-    entry1 = %{date: ~D[2021-01-01], title: "theater"}
-    entry2 = %{date: ~D[2021-01-02], title: "park"}
-    entry3 = %{date: ~D[2021-01-03], title: "cinema"}
-    TodoList.new()
-    |> TodoList.addEntry(entry1)
-    |> TodoList.addEntry(entry2)
-    |> TodoList.addEntry(entry3)
-
-  end
-
-  def update_element_test() do
-
-    todo_list = generate_test_data()
-    |> TodoList.updateEntry(1, &Map.put(&1, :date, ~D[2111-01-01]) )
-    |> TodoList.updateEntry(2, &Map.put(&1, :title, "you are free today"))
-  end
-
-  def delete_test() do
-    generate_test_data()
-    |> TodoList.deleteEntry(1)
-  end
-
-end
 
 end

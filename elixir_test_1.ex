@@ -120,6 +120,10 @@ list = [1, 2, 3]
 ##############  PIN OPERATOR
 
 # ^ This operator avoids that a value is reAssigned
+x = 1
+x = 2
+
+
 
 {x, ^x} = {2, 1}
 2 = x

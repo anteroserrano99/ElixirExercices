@@ -30,7 +30,7 @@ defmodule KeyValueStore do
   end
 
   @impl GenServer
-  def handle_call({:get, key}, _, state) do
+  def handle_call({:get, key}, _from, state) do
     {:reply, Map.get(state, key), state}
   end
 
