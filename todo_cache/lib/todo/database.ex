@@ -1,11 +1,12 @@
 defmodule Todo.Database do
   use GenServer
 ## global variable where the files are located
-  @db_folder "./persist"
+  @db_folder "./database"
 
   @impl GenServer
   def init(_) do
     File.mkdir_p!(@db_folder)
+    |> IO.puts()
     {:ok, nil}
   end
 
@@ -17,6 +18,7 @@ defmodule Todo.Database do
 
 
   def store(key, data) do
+    IO.puts("entraDB")
     GenServer.cast(__MODULE__, {:store, key, data})
   end
 
@@ -35,10 +37,11 @@ defmodule Todo.Database do
 
   @impl GenServer
   def handle_cast({:store, key, value}, state) do
+    IO.puts("entra")
     key
     |> file_name()
     |> File.write!(:erlang.term_to_binary(value))
-
+    |> IO.puts()
     {:noreply, state}
   end
 

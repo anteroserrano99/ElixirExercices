@@ -17,7 +17,7 @@ defmodule TodoCacheTest do
     Todo.Server.add_entry(antero_pid, %{date: ~D[2021-12-12], title: "works"})
     entries = Todo.Server.entries(antero_pid)
 
-    assert %Todo.List{autoId: 2, entries: %{1 => {date: ~D[2021-12-12], title: "works"}}} = entries
+    assert %Todo.List{autoId: 2, entries: %{1 => %{date: ~D[2021-12-12], title: "works"}}} = entries
   end
 
 end
