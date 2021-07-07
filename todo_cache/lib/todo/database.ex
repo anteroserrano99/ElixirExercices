@@ -6,7 +6,9 @@ defmodule Todo.Database do
   @impl GenServer
   def init(_) do
     File.mkdir_p!(@db_folder)
-    {:ok, nil}
+    {{:ok, exector1}, {:ok, exector2}, {:ok, exector3}} = {Todo.DatabaseWorker.start, Todo.DatabaseWorker.start, Todo.DatabaseWorker.start}
+    executors = [exector1, exector2, exector3]
+    {:ok, executors}
   end
 
 
@@ -17,11 +19,44 @@ defmodule Todo.Database do
 
 
   def store(key, data) do
-    GenServer.cast(__MODULE__, {:store, key, data})
+    worker = GenServer.call(__MODULE__, {:getWorker, key})
+    GenServer.cast(worker, {:store, key, data})
   end
 
   def get(key) do
-    GenServer.call(__MODULE__, {:get, key})
+    worker = GenServer.call(__MODULE__, {:getWorker, key})
+    GenServer.call(worker, {:get, key})
+  end
+
+  def handle_call({:getWorker, key}, _, state) do
+    return = Enum.at(state, choose_worker(key))
+    {:reply, return, state}
+  end
+
+
+
+  def choose_worker(key) do
+    :erlang.phash2(key, 3)
+  end
+
+
+end
+
+
+
+defmodule Todo.DatabaseWorker do
+  use GenServer
+
+  @db_folder "./database"
+
+  @impl GenServer
+  def init(_) do
+    {:ok, nil}
+  end
+
+  def start() do
+    GenServer.start(Todo.DatabaseWorker, nil)
+
   end
 
   @impl GenServer
@@ -40,7 +75,6 @@ defmodule Todo.Database do
     |> File.write!(:erlang.term_to_binary(value))
     {:noreply, state}
   end
-
 
 
   defp file_name(key) do
