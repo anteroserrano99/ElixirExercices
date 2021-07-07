@@ -55,6 +55,7 @@ defmodule Todo.DatabaseWorker do
   end
 
   def start() do
+    IO.puts("Starting worker")
     GenServer.start(Todo.DatabaseWorker, nil)
 
   end

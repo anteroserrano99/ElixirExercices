@@ -7,6 +7,7 @@ defmodule Todo.Server do
   end
 
   def start(name) do
+    IO.puts("Starting todo cache")
     GenServer.start(Todo.Server, name)
   end
 
