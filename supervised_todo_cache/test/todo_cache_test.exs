@@ -2,7 +2,9 @@ defmodule TodoCacheTest do
   use ExUnit.Case
 
   test "server_process" do
-    {:ok, cache_server} = Todo.Cache.start_link(nil)
+    Todo.Cache.start_link(nil)
+    Todo.Database.start_link(nil)
+
     antero_pid = Todo.Cache.server_process("Antero")
 
     assert antero_pid != Todo.Cache.server_process("Bob")
@@ -11,7 +13,9 @@ defmodule TodoCacheTest do
   end
 
   test "todo_operation" do
-    {:ok, cache_server} = Todo.Cache.start_link(nil)
+    Todo.Cache.start_link(nil)
+    Todo.Database.start_link(nil)
+
     antero_pid = Todo.Cache.server_process("Antero")
 
     Todo.Server.add_entry(antero_pid, %{date: ~D[2021-12-12], title: "works"})

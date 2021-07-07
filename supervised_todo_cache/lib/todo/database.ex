@@ -6,81 +6,47 @@ defmodule Todo.Database do
   @impl GenServer
   def init(_) do
     File.mkdir_p!(@db_folder)
-    {{:ok, exector1}, {:ok, exector2}, {:ok, exector3}} = {Todo.DatabaseWorker.start, Todo.DatabaseWorker.start, Todo.DatabaseWorker.start}
-    executors = [exector1, exector2, exector3]
-    {:ok, executors}
+
+    {:ok, start_workers()}
   end
 
 
-  def start() do
-    GenServer.start(__MODULE__, nil, name: __MODULE__)
+  def start_link(_) do
+    IO.puts("Starting Database")
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
 
   end
 
 
   def store(key, data) do
-    worker = GenServer.call(__MODULE__, {:getWorker, key})
-    GenServer.cast(worker, {:store, key, data})
+    key
+    |> choose_worker()
+    |> Todo.DatabaseWorker.store(key, data)
   end
 
   def get(key) do
-    worker = GenServer.call(__MODULE__, {:getWorker, key})
-    GenServer.call(worker, {:get, key})
-  end
-
-  def handle_call({:getWorker, key}, _, state) do
-    return = Enum.at(state, choose_worker(key))
-    {:reply, return, state}
-  end
-
-
-
-  def choose_worker(key) do
-    :erlang.phash2(key, 3)
-  end
-
-
-end
-
-
-
-defmodule Todo.DatabaseWorker do
-  use GenServer
-
-  @db_folder "./database"
-
-  @impl GenServer
-  def init(_) do
-    {:ok, nil}
-  end
-
-  def start() do
-    IO.puts("Starting worker")
-    GenServer.start(Todo.DatabaseWorker, nil)
-
-  end
-
-  @impl GenServer
-  def handle_call({:get, key}, _, state) do
-    data = case File.read(file_name(key)) do
-      {:ok, contents} -> :erlang.binary_to_term(contents)
-      _ -> nil
-    end
-    {:reply, data, state}
-  end
-
-  @impl GenServer
-  def handle_cast({:store, key, value}, state) do
     key
-    |> file_name()
-    |> File.write!(:erlang.term_to_binary(value))
-    {:noreply, state}
+    |> choose_worker()
+    |> Todo.DatabaseWorker.get(key)
+  end
+
+  def handle_call({:choose_worker, key}, _, workers) do
+    worker_key = :erlang.phash2(key, 3)
+    {:reply, Map.get(workers, worker_key), workers}
   end
 
 
-  defp file_name(key) do
-    Path.join(@db_folder, to_string(key))
-
+  defp choose_worker(key) do
+    GenServer.call(__MODULE__, {:choose_worker, key})
   end
+
+
+  defp start_workers() do
+    for index <- 1..3, into: %{} do
+      {:ok, pid} = Todo.DatabaseWorker.start_link(@db_folder)
+      {index - 1, pid}
+    end
+  end
+
 
 end
