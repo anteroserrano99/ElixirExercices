@@ -1,6 +1,7 @@
 defmodule Todo.Database do
   use GenServer
 ## global variable where the files are located
+  @pool_size 3
   @db_folder "./database"
 
   @impl GenServer
@@ -11,9 +12,10 @@ defmodule Todo.Database do
   end
 
 
-  def start_link(_) do
+  def start_link do
     IO.puts("Starting Database")
-    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
+    children = Enum.map(1..@pool_size, &worker_spec/1)
+    Supervisor.start_link(children, strategy: :one_for_one)
 
   end
 
@@ -30,22 +32,31 @@ defmodule Todo.Database do
     |> Todo.DatabaseWorker.get(key)
   end
 
-  def handle_call({:choose_worker, key}, _, workers) do
-    worker_key = :erlang.phash2(key, 3)
-    {:reply, Map.get(workers, worker_key), workers}
-  end
-
-
   defp choose_worker(key) do
-    GenServer.call(__MODULE__, {:choose_worker, key})
+    worker_key = :erlang.phash2(key, @pool_size) +1
   end
 
 
   defp start_workers() do
     for index <- 1..3, into: %{} do
-      {:ok, pid} = Todo.DatabaseWorker.start_link(@db_folder)
+      {:ok, pid} = Todo.DatabaseWorker.start_link({@db_folder, index - 1})
       {index - 1, pid}
     end
+  end
+
+  defp worker_spec(worker_id) do
+    default_worker_spec = {Todo.DatabaseWorker, {@db_folder, worker_id}}
+    Supervisor.child_spec(default_worker_spec, id: worker_id)
+
+  end
+
+  def child_spec(_) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, []},
+      type: :supervisor
+    }
+
   end
 
 
