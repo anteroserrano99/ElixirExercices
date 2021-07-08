@@ -1,15 +1,7 @@
 defmodule Todo.Database do
-  use GenServer
 ## global variable where the files are located
   @pool_size 3
   @db_folder "./database"
-
-  @impl GenServer
-  def init(_) do
-    File.mkdir_p!(@db_folder)
-
-    {:ok, start_workers()}
-  end
 
 
   def start_link do
