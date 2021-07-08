@@ -17,7 +17,7 @@ defmodule Todo.Cache do
       {:ok, todo_server} ->
         {:reply, todo_server, todo_servers}
       :error ->
-        {:ok, new_server} = Todo.Server.start(todo_list_name)
+        {:ok, new_server} = Todo.Server.start_link(todo_list_name)
         {:reply, new_server, Map.put(todo_servers, todo_list_name, new_server) }
     end
 
@@ -36,7 +36,7 @@ end
 defmodule TestingModuleCache do
 
   def test_cache()do
-    {:ok, cache_pid} = Todo.Cache.start()
+    {:ok, cache_pid} = Todo.Cache.start_link()
     server_pid1 = Todo.Cache.server_process(cache_pid, "Antero's list")
     server_pid2 = Todo.Cache.server_process(cache_pid, "John's list")
     list1 = test_server(server_pid1)

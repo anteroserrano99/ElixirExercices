@@ -25,16 +25,9 @@ defmodule Todo.Database do
   end
 
   defp choose_worker(key) do
-    worker_key = :erlang.phash2(key, @pool_size) +1
+    :erlang.phash2(key, @pool_size) +1
   end
 
-
-  defp start_workers() do
-    for index <- 1..3, into: %{} do
-      {:ok, pid} = Todo.DatabaseWorker.start_link({@db_folder, index - 1})
-      {index - 1, pid}
-    end
-  end
 
   defp worker_spec(worker_id) do
     default_worker_spec = {Todo.DatabaseWorker, {@db_folder, worker_id}}

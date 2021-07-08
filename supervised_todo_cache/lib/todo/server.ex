@@ -6,9 +6,9 @@ defmodule Todo.Server do
     {:ok, {name, Todo.List.new() || Todo.List.new()}}
   end
 
-  def start(name) do
-    IO.puts("Starting todo cache")
-    GenServer.start(Todo.Server, name)
+  def start_link(name) do
+    IO.puts("Starting todo cache #{name}")
+    GenServer.start_link(Todo.Server, name, name: via_tuple(name))
   end
 
   def add_entry(pid, new_entry) do
@@ -29,6 +29,10 @@ defmodule Todo.Server do
     GenServer.call(pid, {:retrieve})
   end
 
+
+  defp via_tuple(name) do
+    Todo.ProcessRegistry.via_tuple({__MODULE__, name})
+  end
 
   @impl GenServer
   def handle_call({:retrieve}, _, {name, todo_list}) do
