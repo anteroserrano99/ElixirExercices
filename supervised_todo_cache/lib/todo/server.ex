@@ -1,5 +1,5 @@
 defmodule Todo.Server do
-  use GenServer
+  use GenServer, restart: :temporary
 
   @impl GenServer
   def init(name) do
@@ -7,7 +7,7 @@ defmodule Todo.Server do
   end
 
   def start_link(name) do
-    IO.puts("Starting todo cache #{name}")
+    IO.puts("Starting todo server #{name}")
     GenServer.start_link(Todo.Server, name, name: via_tuple(name))
   end
 
