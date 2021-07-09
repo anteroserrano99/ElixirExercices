@@ -4,6 +4,7 @@ defmodule Todo.System do
     Supervisor.start_link([
       Todo.ProcessRegistry,
       Todo.Database,
+      Todo.Metrics,
       Todo.Cache],
         strategy: :one_for_one)
   end
