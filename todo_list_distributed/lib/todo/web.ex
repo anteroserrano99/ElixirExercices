@@ -29,6 +29,7 @@ IO.puts("SE FORMATEA")
     entries
     |> Enum.map(
     fn element ->
+      IO.inspect(element)
       {_, parsed_element} = element
       "#{parsed_element.date} #{parsed_element.title}"
     end

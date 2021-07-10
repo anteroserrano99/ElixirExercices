@@ -1,7 +1,7 @@
 defmodule Todo.Server do
   use GenServer, restart: :temporary
 
-  @expiry_idle_timeout :timer.seconds(10)
+  @expiry_idle_timeout :timer.seconds(10000)
 
   @impl GenServer
   def init(name) do
@@ -10,7 +10,7 @@ defmodule Todo.Server do
 
   def start_link(name) do
     IO.puts("Starting todo server #{name}")
-    GenServer.start_link(Todo.Server, name, name: via_tuple(name))
+    GenServer.start_link(Todo.Server, name, name: global_name(name))
   end
 
   def add_entry(pid, new_entry) do
@@ -31,10 +31,19 @@ defmodule Todo.Server do
     GenServer.call(pid, {:retrieve})
   end
 
+  defp global_name(name) do
+    {:global, {__MODULE__, name}}
 
-  defp via_tuple(name) do
-    Todo.ProcessRegistry.via_tuple({__MODULE__, name})
   end
+
+  def whereis(name) do
+    case :global.whereis_name({__MODULE__, name}) do
+      :undefined -> nil
+      pid -> pid
+    end
+
+  end
+
 
   def handle_info(:timeout, {name, todo_list}) do
     IO.puts("Stopping Server #{name}")
@@ -45,10 +54,13 @@ defmodule Todo.Server do
   @impl GenServer
   def handle_call({:retrieve}, _, {name, todo_list}) do
     IO.puts("retrieve")
-    IO.inspect(todo_list)
     %Todo.List{autoId: _, entries: entries} = todo_list
-    IO.inspect(entries)
-    {:reply, entries, todo_list, @expiry_idle_timeout}
+    return = Todo.Database.get(name)
+
+    %Todo.List{autoId: _, entries: entries} = return
+    IO.inspect(return)
+
+    {:reply, entries, @expiry_idle_timeout}
   end
 
   @impl GenServer
