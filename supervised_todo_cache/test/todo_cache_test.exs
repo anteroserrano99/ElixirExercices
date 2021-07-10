@@ -2,8 +2,6 @@ defmodule TodoCacheTest do
   use ExUnit.Case
 
   test "server_process" do
-    Todo.Cache.start_link(nil)
-    Todo.Database.start_link(nil)
 
     antero_pid = Todo.Cache.server_process("Antero")
 
@@ -13,8 +11,6 @@ defmodule TodoCacheTest do
   end
 
   test "todo_operation" do
-    Todo.Cache.start_link(nil)
-    Todo.Database.start_link(nil)
 
     antero_pid = Todo.Cache.server_process("Antero")
 

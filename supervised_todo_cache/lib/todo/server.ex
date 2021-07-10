@@ -44,7 +44,11 @@ defmodule Todo.Server do
 
   @impl GenServer
   def handle_call({:retrieve}, _, {name, todo_list}) do
-    {:reply, Todo.Database.get(name), todo_list, @expiry_idle_timeout}
+    IO.puts("retrieve")
+    IO.inspect(todo_list)
+    %Todo.List{autoId: _, entries: entries} = todo_list
+    IO.inspect(entries)
+    {:reply, entries, todo_list, @expiry_idle_timeout}
   end
 
   @impl GenServer
